@@ -1,4 +1,5 @@
 import datetime
+from io import StringIO
 
 import paramiko
 from werkzeug.exceptions import BadRequest, InternalServerError
@@ -15,6 +16,7 @@ def mysql_backup(data):
     destination_object_storage = data["destination_object_storage"]
     destination_object_storage_name = data["destination_object_storage_name"]
     destination_object_storage_path = data["destination_object_storage_path"]
+    cloud_credentials = data["cloud_credentials"]
 
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -28,6 +30,7 @@ def mysql_backup(data):
 
     elif "db_os_private_key" in data:
         db_os_private_key = data["db_os_private_key"]
+        db_os_private_key = paramiko.RSAKey.from_private_key(StringIO(db_os_private_key))
         try:
             ssh.connect(hostname=db_os_ip_address, username=db_os_username, pkey=db_os_private_key)
         except Exception as e:
@@ -36,8 +39,8 @@ def mysql_backup(data):
         raise BadRequest("At least one key should be present. [db_os_password, db_os_private_key]")
 
     date_time = str(datetime.datetime.utcnow()) + ".gz"
-    ssh_stdout, ssh_stderr = ssh.exec_command(f"mysqldump -u {mysql_user_name} -p{mysql_password} --single-transaction"
-                                              f" database {mysql_db_name} | gzip -c ")[1:]
+    ssh_stdout, ssh_stderr = ssh.exec_command(f"sudo mysqldump -u {mysql_user_name} -p{mysql_password} "
+                                              f"--single-transaction database {mysql_db_name} | gzip -c ")[1:]
 
     if ssh_stderr.read().decode() != "":
         return {
@@ -48,7 +51,7 @@ def mysql_backup(data):
     if destination_object_storage is "gcp":
         try:
             upload_gcp_bucket(ssh_stdout.read(), destination_object_storage_name,
-                              filename=date_time, path=destination_object_storage_path)
+                              filename=date_time, path=destination_object_storage_path, credentials=cloud_credentials)
         except Exception as e:
             raise InternalServerError("Failed to upload backup")
 
