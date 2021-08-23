@@ -1,6 +1,8 @@
 import datetime
 
 from werkzeug.exceptions import BadRequest, InternalServerError
+
+from app.main.cloud_object_storage.aws import aws_s3
 from app.main.cloud_object_storage.gcp import upload_gcp_bucket
 from app.main.services.client import os_client
 
@@ -28,8 +30,14 @@ def mysql_backup(data):
             raise InternalServerError("Failed to upload backup")
 
     elif data["destination_object_storage"] is "aws":
-        # TODO: upload_aws_bucket()
-        pass
+        if not aws_s3(access_key=data['cloud_credentials']["access_key"],
+                      secret_access_key=data['cloud_credentials']["secret_access_key"],
+                      bucket=data["destination_object_storage_name"],
+                      object_name=date_time,
+                      path=data["destination_object_storage_path"],
+                      stdout=ssh_stdout.read()):
+
+            raise InternalServerError("Upload Failed!")
 
     elif data["destination_object_storage"] is "azure":
         # TODO: upload to azure object storage
