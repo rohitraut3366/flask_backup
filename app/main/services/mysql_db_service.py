@@ -1,9 +1,6 @@
 import datetime
-from io import StringIO
 
-import paramiko
 from werkzeug.exceptions import BadRequest, InternalServerError
-
 from app.main.cloud_object_storage.gcp import upload_gcp_bucket
 from app.main.services.client import os_client
 
