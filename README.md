@@ -40,7 +40,11 @@ INPUT JSON:
 }
 ```
 OUTPUT:
-```OK```
+```
+{
+    "back_file_name": "wordpress2021-08-24-19:31:51.102289.gz"
+}
+```
 
 2. MONGO DB BACKUP and UPLOAD TO GCP 
 Example <br>
@@ -75,6 +79,11 @@ INPUT:
         }
      }
     }
-
+```
+response:
+```
+{
+    "back_file_name": "mongo-db2021-08-24-19:32:47.730122.gz"
+}
 ```
 
