@@ -15,8 +15,7 @@
         "destination_object_storage_name": "rohittest",
         "destination_object_storage_path": "",
         "cloud_credentials": {
-            "access_key": "AKIA5NVHZZQBMKGA3WGO",
-            "secret_access_key": "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"
+           
         }
     }
 }
