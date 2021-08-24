@@ -10,9 +10,9 @@ def mysql_backup(data):
     ssh = os_client(data["os"])
     bucket_file_name = data['database']["backup_file_prefix"]+ str(datetime.datetime.utcnow()).replace(" ", "-") + ".gz"
     date_time = "/tmp/" + bucket_file_name
-    ssh_stdout, ssh_stderr = ssh.exec_command(f"sudo mysqldump -u {data['database']['mysql_user_name']} "
-                                              f"-p{data['database']['mysql_user_password']} "
-                                              f"--single-transaction --databases {data['database']['mysql_db_name']} "
+    ssh_stdout, ssh_stderr = ssh.exec_command(f"sudo mysqldump -u {data['database']['user_name']} "
+                                              f"-p{data['database']['user_password']} "
+                                              f"--single-transaction --databases {data['database']['db_name']} "
                                               f"| gzip -c > {date_time}")[1:]
 
     if ssh_stderr.read().decode() != "":

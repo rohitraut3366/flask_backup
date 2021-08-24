@@ -15,9 +15,7 @@ def mongo_backup(data):
 
     try:
         ssh_stdout, ssh_stderr = ssh.exec_command(
-            f"""sudo mongodump --db {data["database"]["mongo_db_name"]} --gzip --archive > {date_time}""")[1:]
-        print(f"""sudo mongodump --db {data["database"]["mongo_db_name"]} --gzip --archive > {date_time}""")
-
+            f"""sudo mongodump --db {data["database"]["db_name"]} --gzip --archive > {date_time}""")[1:]
     except Exception as e:
         return {
             "operation": "mongo db backup",
