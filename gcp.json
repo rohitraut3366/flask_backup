@@ -1,0 +1,21 @@
+{
+  "os": {
+    "db_os_ip_address": "",
+    "db_os_password/db_os_private_key": "",
+    "db_os_username": ""
+  },
+  "database": {
+    "mysql_user_name": "",
+    "mysql_user_password": "",
+    "mysql_db_name": "",
+    "backup_file_prefix": ""
+
+  },
+  "cloud_details":{
+    "provider": "aws/gcp/azure",
+    "destination_object_storage_name": "",
+    "destination_object_storage_path": "",
+    "cloud_credentials": {
+    }
+  }
+}

@@ -1,18 +1,19 @@
 import datetime
 
-from werkzeug.exceptions import BadRequest, InternalServerError
+from werkzeug.exceptions import InternalServerError
 
-from app.main.cloud_object_storage.aws import aws_s3
-from app.main.cloud_object_storage.gcp import upload_gcp_bucket
 from app.main.services.client import os_client
+from app.main.services.utilities import sftp_, cloud_selection
 
 
 def mysql_backup(data):
-    ssh = os_client(data)
-
-    date_time = str(datetime.datetime.utcnow()) + ".gz"
-    ssh_stdout, ssh_stderr = ssh.exec_command(f"sudo mysqldump -u {data['mysql_user_name']} -p{data['mysql_password']} "
-                                              f"--single-transaction database {data['mysql_db_name']} | gzip -c ")[1:]
+    ssh = os_client(data["os"])
+    bucket_file_name = str(datetime.datetime.utcnow()).replace(" ", "-") + ".gz"
+    date_time = "/tmp/" + data['database']["backup_file_prefix"] + bucket_file_name
+    ssh_stdout, ssh_stderr = ssh.exec_command(f"sudo mysqldump -u {data['database']['mysql_user_name']} "
+                                              f"-p{data['database']['mysql_user_password']} "
+                                              f"--single-transaction --databases {data['database']['mysql_db_name']} "
+                                              f"| gzip -c > {date_time}")[1:]
 
     if ssh_stderr.read().decode() != "":
         return {
@@ -20,29 +21,12 @@ def mysql_backup(data):
             "std_error": ssh_stderr.read().decode()
         }
 
-    if data["destination_object_storage"] is "gcp":
-        try:
-            upload_gcp_bucket(ssh_stdout.read(), data["destination_object_storage_name"],
-                              filename=date_time, path=data["destination_object_storage_path"],
-                              credentials=data["cloud_credentials"])
-
-        except Exception as e:
-            raise InternalServerError("Failed to upload backup")
-
-    elif data["destination_object_storage"] is "aws":
-        if not aws_s3(access_key=data['cloud_credentials']["access_key"],
-                      secret_access_key=data['cloud_credentials']["secret_access_key"],
-                      bucket=data["destination_object_storage_name"],
-                      object_name=date_time,
-                      path=data["destination_object_storage_path"],
-                      stdout=ssh_stdout.read()):
-
-            raise InternalServerError("Upload Failed!")
-
-    elif data["destination_object_storage"] is "azure":
-        # TODO: upload to azure object storage
-        pass
-
+    if sftp_(ssh, date_time):
+        ssh.exec_command(f"rm -rf {date_time}")
     else:
-        raise BadRequest("Destination object storage is not recognized!")
+        raise InternalServerError("Failed to download backup")
+
+    ssh.close()
+
+    cloud_selection(data["cloud_details"], date_time, bucket_file_name)
     return "OK"

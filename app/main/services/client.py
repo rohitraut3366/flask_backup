@@ -4,23 +4,32 @@ from werkzeug.exceptions import BadRequest
 from io import StringIO
 
 
-def os_client(data):
+def os_client(connection_data):
 
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    if "db_os_password" in data:
-        db_os_password = data["db_os_password"]
+    if "db_os_password" in connection_data:
+        db_os_password = connection_data["db_os_password"]
         try:
-            ssh.connect(data["db_os_ip_address"], username=data["db_os_username"], password=db_os_password)
+            ssh.connect(connection_data["db_os_ip_address"],
+                        username=connection_data["db_os_username"],
+                        password=db_os_password)
+
         except Exception as e:
             raise BadRequest("Server Connection failed!")
 
-    elif "db_os_private_key" in data:
-        db_os_private_key = paramiko.RSAKey.from_private_key(StringIO(data["db_os_private_key"]))
+    elif "db_os_private_key" in connection_data:
+        try:
+            db_os_private_key = paramiko.RSAKey.from_private_key(StringIO(connection_data["db_os_private_key"].__str__()))
+        except Exception as e:
+            raise BadRequest("Incorrect private key format!")
 
         try:
-            ssh.connect(hostname=data["db_os_ip_address"], username=data["db_os_username"], pkey=db_os_private_key)
+            ssh.connect(hostname=connection_data["db_os_ip_address"],
+                        username=connection_data["db_os_username"],
+                        pkey=db_os_private_key)
+
         except Exception as e:
             raise BadRequest("Server Connection failed!")
 

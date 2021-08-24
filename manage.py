@@ -4,7 +4,7 @@ from app import blueprint
 from app.main import create_app
 
 
-app = create_app()
+app = create_app("dev")
 CORS(app, resources={r"/": {"origins": "*"}})
 
 app.register_blueprint(blueprint)
