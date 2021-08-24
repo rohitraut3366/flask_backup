@@ -8,8 +8,8 @@ from app.main.services.utilities import sftp_, cloud_selection
 
 def mysql_backup(data):
     ssh = os_client(data["os"])
-    bucket_file_name = str(datetime.datetime.utcnow()).replace(" ", "-") + ".gz"
-    date_time = "/tmp/" + data['database']["backup_file_prefix"] + bucket_file_name
+    bucket_file_name = data['database']["backup_file_prefix"]+ str(datetime.datetime.utcnow()).replace(" ", "-") + ".gz"
+    date_time = "/tmp/" + bucket_file_name
     ssh_stdout, ssh_stderr = ssh.exec_command(f"sudo mysqldump -u {data['database']['mysql_user_name']} "
                                               f"-p{data['database']['mysql_user_password']} "
                                               f"--single-transaction --databases {data['database']['mysql_db_name']} "
